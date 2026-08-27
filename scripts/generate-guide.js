@@ -9,6 +9,7 @@ const NVIDIA_MODEL = process.env.NVIDIA_TEXT_MODEL || 'nvidia/nemotron-3-super-1
 // File paths
 const TOPICS_FILE = path.join(__dirname, '..', 'topics.json');
 const GENERATED_TOPICS_FILE = path.join(__dirname, '..', 'generated-topics.json');
+const GENERATION_FAILURES_FILE = path.join(__dirname, '..', 'generation-failures.json');
 const GUIDES_DIR = path.join(__dirname, '..', '_guides');
 const IMAGES_DIR = path.join(__dirname, '..', 'assets', 'images', 'guides');
 
@@ -63,6 +64,15 @@ function loadTopics() {
 // Save generated topics
 function saveGeneratedTopics(generatedTopics) {
   fs.writeFileSync(GENERATED_TOPICS_FILE, JSON.stringify(generatedTopics, null, 2));
+}
+
+function loadGenerationFailures() {
+  if (!fs.existsSync(GENERATION_FAILURES_FILE)) return [];
+  return JSON.parse(fs.readFileSync(GENERATION_FAILURES_FILE, 'utf-8'));
+}
+
+function saveGenerationFailures(failures) {
+  fs.writeFileSync(GENERATION_FAILURES_FILE, `${JSON.stringify(failures, null, 2)}\n`);
 }
 
 // Read titles from existing guide front matter so a stale tracking file cannot
@@ -144,15 +154,32 @@ async function validateUrl(url, timeout = 10000) {
 }
 
 // Fetch the required official source and convert it to bounded plain text for the model.
-async function fetchSourceContent(url, timeout = 30000) {
-  const response = await axios.get(url, {
-    timeout,
-    maxRedirects: 5,
-    headers: {
-      'User-Agent': 'decent.charity article generator'
-    },
-    validateStatus: status => status >= 200 && status < 400
-  });
+async function fetchSourceContent(url, timeout = 30000, maxRetries = 3) {
+  let response;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      response = await axios.get(url, {
+        timeout,
+        maxRedirects: 5,
+        headers: {
+          'User-Agent': 'decent.charity article generator'
+        },
+        validateStatus: status => status >= 200 && status < 400
+      });
+      break;
+    } catch (error) {
+      const status = error.response?.status;
+      const detail = status ? `HTTP ${status}` : (error.code || error.message);
+      if (isTransientError(error) && attempt < maxRetries) {
+        const waitTime = attempt * 5000;
+        console.log(`  Primary source temporarily unavailable (${detail}); retrying in ${waitTime / 1000}s...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        continue;
+      }
+      throw new Error(`Primary source unavailable (${detail}): ${url}`);
+    }
+  }
 
   const html = String(response.data);
   const plainText = html
@@ -167,7 +194,7 @@ async function fetchSourceContent(url, timeout = 30000) {
     .trim();
 
   if (plainText.length < 200) {
-    throw new Error(`Primary source did not return enough usable content: ${url}`);
+    throw new Error(`Primary source returned less than 200 characters of usable content: ${url}`);
   }
 
   return plainText.slice(0, 16000);
@@ -838,73 +865,94 @@ function updateSeriesNavigation(newTopic) {
   });
 }
 
-// Main function
-async function main() {
-  try {
-    console.log('Starting guide generation...');
-
-    // Load topics
-    const { topics, generatedTopics } = loadTopics();
-    console.log(`Loaded ${topics.length} topics, ${generatedTopics.length} already generated`);
-
-    const existingGuideTitles = loadExistingGuideTitles();
-    const usedTitles = new Set([...generatedTopics, ...existingGuideTitles]);
-
-    // Select topic
-    const topic = selectNextTopic(topics, usedTitles, generatedTopics);
-    if (!topic) {
-      console.log('All configured article titles have been generated. Nothing to do; pausing cleanly.');
-      return;
-    }
-
-    // Only require the API key when there is actually an article to generate.
-    if (!process.env.NVIDIA_API_KEY) {
-      throw new Error('NVIDIA_API_KEY environment variable is not set');
-    }
-
-    const targetFilename = createFilename(topic.title);
-    if (fs.existsSync(path.join(GUIDES_DIR, targetFilename))) {
-      throw new Error(`Refusing to overwrite existing guide: ${targetFilename}`);
-    }
-
-    console.log(`Selected topic: ${topic.title} (${topic.category})`);
-
-    // Generate content
-    console.log('Generating content with NVIDIA API...');
-    const content = await generateGuideContent(topic);
-
-    // Wait a moment before image generation to avoid rate limiting
-    console.log('Waiting 5 seconds before image generation...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
-
-    // Fetch image
-    console.log('Fetching image...');
-    const imageData = await fetchAndSaveImage(topic);
-
-    // Create guide file
-    const filename = await createGuideFile(topic, content, imageData);
-
-    // Update series navigation in adjacent guides
-    updateSeriesNavigation(topic);
-
-    // Update generated topics
-    if (!generatedTopics.includes(topic.title)) {
-      generatedTopics.push(topic.title);
-      saveGeneratedTopics(generatedTopics);
-    }
-
-    console.log('Guide generation complete!');
-    console.log(`Total guides generated: ${generatedTopics.length}/${topics.length}`);
-
-  } catch (error) {
-    console.error('Error generating guide:', error.message || error);
-    process.exit(1);
+async function generateTopic(topic, generatedTopics) {
+  const targetFilename = createFilename(topic.title);
+  if (fs.existsSync(path.join(GUIDES_DIR, targetFilename))) {
+    throw new Error(`Refusing to overwrite existing guide: ${targetFilename}`);
   }
+
+  console.log(`Selected topic: ${topic.title} (${topic.category})`);
+  console.log('Fetching and validating primary source, then generating content...');
+  const content = await generateGuideContent(topic);
+
+  console.log('Waiting 5 seconds before image generation...');
+  await new Promise(resolve => setTimeout(resolve, 5000));
+
+  console.log('Fetching image...');
+  const imageData = await fetchAndSaveImage(topic);
+  await createGuideFile(topic, content, imageData);
+  updateSeriesNavigation(topic);
+
+  if (!generatedTopics.includes(topic.title)) {
+    generatedTopics.push(topic.title);
+    saveGeneratedTopics(generatedTopics);
+  }
+}
+
+// Generate at most one article per run. If a title fails, record the issue and
+// continue through the unused queue so one bad source cannot block every title.
+async function main() {
+  console.log('Starting guide generation...');
+
+  const { topics, generatedTopics } = loadTopics();
+  console.log(`Loaded ${topics.length} topics, ${generatedTopics.length} already generated`);
+
+  const existingGuideTitles = loadExistingGuideTitles();
+  const usedTitles = new Set([...generatedTopics, ...existingGuideTitles]);
+  let failures = loadGenerationFailures().filter(failure => !usedTitles.has(failure.title));
+  const attemptedTitles = new Set();
+
+  if (!topics.some(topic => !usedTitles.has(topic.title))) {
+    saveGenerationFailures([]);
+    console.log('All configured article titles have been generated. Nothing to do; pausing cleanly.');
+    return;
+  }
+
+  if (!process.env.NVIDIA_API_KEY) {
+    throw new Error('NVIDIA_API_KEY environment variable is not set');
+  }
+
+  while (true) {
+    const unavailableTitles = new Set([...usedTitles, ...attemptedTitles]);
+    const topic = selectNextTopic(topics, unavailableTitles, generatedTopics);
+    if (!topic) break;
+    attemptedTitles.add(topic.title);
+
+    try {
+      await generateTopic(topic, generatedTopics);
+      failures = failures.filter(failure => failure.title !== topic.title);
+      saveGenerationFailures(failures);
+      console.log('Guide generation complete!');
+      console.log(`Total guides generated: ${generatedTopics.length}/${topics.length}`);
+      return;
+    } catch (error) {
+      const message = error.message || String(error);
+      const failure = {
+        title: topic.title,
+        organization: topic.organization,
+        category: topic.category,
+        source: topic.source,
+        failed_at: new Date().toISOString(),
+        error: message
+      };
+      failures = failures.filter(item => item.title !== topic.title);
+      failures.push(failure);
+      saveGenerationFailures(failures);
+      console.error(`::warning title=Article generation skipped::${topic.title}: ${message}`);
+      console.error(`Skipping failed title and trying the next unused title.`);
+    }
+  }
+
+  const failedTitles = failures.map(failure => failure.title).join('; ');
+  throw new Error(`No article could be generated. Review generation-failures.json. Failed titles: ${failedTitles}`);
 }
 
 // Run if called directly
 if (require.main === module) {
-  main();
+  main().catch(error => {
+    console.error('Error generating guide:', error.message || error);
+    process.exit(1);
+  });
 }
 
 module.exports = {
