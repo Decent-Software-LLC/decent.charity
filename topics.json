@@ -117,5 +117,145 @@
     "category": "clothing",
     "source": "https://www.cradlestocrayons.org/what-we-do/our-history/",
     "tags": ["children", "clothing-insecurity", "everyday-essentials"]
+  },
+  {
+    "title": "Action Against Hunger: Fighting Malnutrition and Building Resilient Communities",
+    "organization": "Action Against Hunger",
+    "category": "hunger",
+    "source": "https://www.actionagainsthunger.org/who-we-are/about/",
+    "tags": ["malnutrition", "food-security", "international-relief"]
+  },
+  {
+    "title": "World Central Kitchen: Serving Fresh Meals on the Front Lines of Crisis",
+    "organization": "World Central Kitchen",
+    "category": "hunger",
+    "source": "https://wck.org/mission-vision-values/",
+    "tags": ["disaster-relief", "emergency-meals", "international-relief"]
+  },
+  {
+    "title": "No Kid Hungry: Working to End Childhood Hunger in America",
+    "organization": "No Kid Hungry",
+    "category": "hunger",
+    "source": "https://www.nokidhungry.org/who-we-are",
+    "tags": ["childhood-hunger", "food-access", "national-campaign"]
+  },
+  {
+    "title": "Rise Against Hunger: Mobilizing Volunteers to Nourish Communities Worldwide",
+    "organization": "Rise Against Hunger",
+    "category": "hunger",
+    "source": "https://riseagainsthunger.org/about-us/",
+    "tags": ["meal-packaging", "volunteerism", "global-hunger"]
+  },
+  {
+    "title": "The Hunger Project: Community-Led Solutions for a World Without Hunger",
+    "organization": "The Hunger Project",
+    "category": "hunger",
+    "source": "https://thp.org/who-we-are/vision/",
+    "tags": ["community-led-development", "food-security", "global-hunger"]
+  },
+  {
+    "title": "United Way Worldwide: Strengthening Communities Through Collective Action",
+    "organization": "United Way Worldwide",
+    "category": "support-services",
+    "source": "https://www.unitedway.org/united-states",
+    "tags": ["community-support", "local-partnerships", "collective-action"]
+  },
+  {
+    "title": "Catholic Charities USA: Serving Neighbors and Advocating for Justice",
+    "organization": "Catholic Charities USA",
+    "category": "support-services",
+    "source": "https://www.catholiccharitiesusa.org/about-us/mission/",
+    "tags": ["faith-based-service", "human-services", "social-justice"]
+  },
+  {
+    "title": "Goodwill Industries International: Turning Donations Into Employment Opportunities",
+    "organization": "Goodwill Industries International",
+    "category": "support-services",
+    "source": "https://www.goodwill.org/about/",
+    "tags": ["employment", "job-training", "economic-mobility"]
+  },
+  {
+    "title": "Lutheran Services in America: Cultivating Caring Communities Across the Nation",
+    "organization": "Lutheran Services in America",
+    "category": "support-services",
+    "source": "https://lutheranservices.org/our-story/",
+    "tags": ["faith-based-service", "human-services", "national-network"]
+  },
+  {
+    "title": "The Salvation Army: Meeting Human Needs Without Discrimination",
+    "organization": "The Salvation Army",
+    "category": "support-services",
+    "source": "https://www.salvationarmyusa.org/about-us/",
+    "tags": ["faith-based-service", "disaster-relief", "basic-needs"]
+  },
+  {
+    "title": "Project HOME: Breaking the Cycle of Homelessness and Poverty",
+    "organization": "Project HOME",
+    "category": "shelter",
+    "source": "https://www.projecthome.org/about",
+    "tags": ["supportive-housing", "street-outreach", "housing-stability"]
+  },
+  {
+    "title": "Depaul USA: Helping People Move From Homelessness to Stability",
+    "organization": "Depaul USA",
+    "category": "shelter",
+    "source": "https://depaulusa.org/about-us/",
+    "tags": ["homelessness", "supportive-housing", "housing-stability"]
+  },
+  {
+    "title": "PATH: Connecting Californians With Housing and Supportive Services",
+    "organization": "PATH",
+    "category": "shelter",
+    "source": "https://epath.org/about/",
+    "tags": ["homelessness", "affordable-housing", "california"]
+  },
+  {
+    "title": "The Bowery Mission: Food, Shelter and Hope for New York Neighbors",
+    "organization": "The Bowery Mission",
+    "category": "shelter",
+    "source": "https://www.bowery.org/about-us/",
+    "tags": ["emergency-shelter", "faith-based-service", "new-york-city"]
+  },
+  {
+    "title": "Win: Helping New York City Families Find Permanent Homes",
+    "organization": "Win",
+    "category": "shelter",
+    "source": "https://winnyc.org/what-we-do/",
+    "tags": ["family-homelessness", "supportive-housing", "new-york-city"]
+  },
+  {
+    "title": "Delivering Good: Providing New Essentials to People Facing Hardship",
+    "organization": "Delivering Good",
+    "category": "clothing",
+    "source": "https://delivering-good.org/pages/about-us",
+    "tags": ["clothing-donations", "disaster-relief", "basic-needs"]
+  },
+  {
+    "title": "Baby2Baby: Supplying Clothing and Essentials to Children in Need",
+    "organization": "Baby2Baby",
+    "category": "clothing",
+    "source": "https://baby2baby.org/impact/",
+    "tags": ["children", "clothing", "everyday-essentials"]
+  },
+  {
+    "title": "Bottomless Closet: Preparing New York City Women for Workforce Success",
+    "organization": "Bottomless Closet",
+    "category": "clothing",
+    "source": "https://bottomlesscloset.org/history-and-mission/",
+    "tags": ["workplace-attire", "career-development", "new-york-city"]
+  },
+  {
+    "title": "GLAM4GOOD: Addressing Clothing and Self-Care Insecurity",
+    "organization": "GLAM4GOOD",
+    "category": "clothing",
+    "source": "https://glam4good.com/",
+    "tags": ["clothing-insecurity", "self-care", "dignity"]
+  },
+  {
+    "title": "National Giving Alliance: Giving Young People Confidence Through New Clothing",
+    "organization": "National Giving Alliance",
+    "category": "clothing",
+    "source": "https://nationalgivingalliance.org/our-story",
+    "tags": ["children", "new-clothing", "dignity"]
   }
 ]
