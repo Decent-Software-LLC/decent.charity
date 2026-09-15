@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "title": "Goodwill Industries International: Turning Donations Into Employment Opportunities",
+    "organization": "Goodwill Industries International",
+    "category": "support-services",
+    "source": "https://www.goodwill.org/about/",
+    "failed_at": "2026-09-15T11:32:19.074Z",
+    "error": "Primary source unavailable (HTTP 403): https://www.goodwill.org/about/"
+  }
+]
